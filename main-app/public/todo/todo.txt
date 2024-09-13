@@ -1,0 +1,76 @@
+1. Core Functionality
+- [ ] Microphone Control
+    - [ ] Microphone unavailable until user presses "get started" button
+- [ ] Microphone interupt when user starts recording again.
+
+- [ ] LLM Role Management
+    - [ ] Modify the LLM role to send the role specification after login or on new conversation start.
+
+- [ ] PostgreSQL Database with Prisma
+    - [ ] Create PostgreSQL database using Prisma
+        - [ ] Set up Prisma database
+        - [ ] Set up Prisma models:
+            - [ ] User
+            - [ ] Machine data
+            - [ ] Part data
+            - [ ] Session handling
+                - [ ] Conversation history based on user ID
+            - [ ] Points model
+        - [ ] Import Excel files into the database
+
+- [ ] Points System
+    - [ ] Set up accuracy-based scoring:
+        - [ ] Full points for exact part number
+        - [ ] Partial points for hints used or if the answer is close to the part number
+        - [ ] Negative points if the user provides the wrong number after 5 consecutive attempts
+    - [ ] Summarize interaction data and have the AI grade the interaction based on a rubric
+    - [ ] Provide tips on how to improve interactions
+
+2. Security and Session Handling
+- [ ] Authentication and Security
+    - [ ] Ensure Prisma models are connected to the authentication system (e.g., Clerk)
+    - [ ] Protect API routes for session handling and conversation history retrieval
+    - [ ] Secure data handling for sensitive user information
+    - [ ] Implement role-based access control (if needed)
+
+- [ ] Session Handling
+    - [ ] Implement session timeout or inactivity handling (e.g., timeout after a period of inactivity)
+    - [ ] Re-authenticate users if the session expires during long interactions
+
+3. UI and User Experience
+- [ ] UI Update
+    - [ ] Update conversation history display
+    - [ ] Create a "New Conversation" button:
+        - [ ] Clear the previous conversation
+        - [ ] Send the role specification to the AI again
+    - [ ] Add a pop-up dashboard for:
+        - [ ] Viewing conversation histories
+        - [ ] Displaying points breakdown for each conversation
+    - [ ] Provide visual feedback for microphone status (active/inactive)
+
+4. Performance and Optimization
+- [ ] Performance Optimization
+    - [ ] Optimize database queries for conversation history and session data
+    - [ ] Index frequently queried fields (e.g., user_id, session_id) for better performance
+    - [ ] Automate database migrations using Prisma
+
+5. User Experience Enhancements
+- [ ] UX Improvements
+    - [ ] Add error handling for incorrect part numbers or when the AI doesn't understand a request
+    - [ ] Show a progress bar or notification when importing Excel data
+    - [ ] Add a confirmation dialog before clearing conversation history
+
+6. Scalability and Future-proofing
+- [ ] Scalability and Future-proofing
+    - [ ] Plan for scalability in UI and backend for future growth (multiple machines, part types, more users)
+
+7. Analytics and Monitoring
+- [ ] Analytics and Logging
+    - [ ] Implement basic analytics to track user scores, conversation durations, and common errors
+    - [ ] Set up logging for key events (e.g., user logins, errors, data imports)
+
+8. Testing and Debugging
+- [ ] Testing and Debugging
+    - [ ] Write unit tests for Prisma models and API endpoints
+    - [ ] Create integration tests for the workflow (e.g., user login, part identification, conversation history saving, points system)
+    - [ ] Add error handling and retries for API and database connections
