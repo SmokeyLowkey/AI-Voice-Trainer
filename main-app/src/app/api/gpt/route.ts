@@ -24,7 +24,20 @@ const MAX_CHUNK_SIZE = 1900;
 
 export async function POST(req: Request): Promise<Response> {
   const encoder = new TextEncoder();
-  const { transcription }: { transcription: string | null } = await req.json();
+  // Log to verify that the request was received
+  console.log("Request received in API route");
+
+  const { transcription, type }: { transcription: string | null, type: string } = await req.json();
+
+  console.log("Received transcription:", transcription);
+  console.log("Received type:", type);
+
+  if (!transcription) {
+    return new Response(JSON.stringify({ error: 'No transcription provided' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 
   return new Response(
     new ReadableStream({
@@ -32,37 +45,57 @@ export async function POST(req: Request): Promise<Response> {
         try {
           let textResponse = '';
 
-          // Process the transcription with the chosen model
-          if (textModel === 'openai') {
-            const gptResponse = await openai.chat.completions.create({
-              model: 'gpt-4',
-              messages: [{ role: 'user', content: transcription ?? '' }],
-            });
-            textResponse = gptResponse.choices[0].message.content ?? '';
-          } else if (textModel === 'groq') {
-            const groqResponse = await groqClient.chat.completions.create({
-              messages: [{ role: 'user', content: transcription ?? '' }],
-              model: 'llama3-8b-8192',
-            });
-            textResponse = groqResponse.choices[0].message.content ?? '';
-          } else if (textModel === 'deepgram') {
-            textResponse = transcription ?? '';
+          if (type === 'predefined') {
+            console.log("Handling predefined message...");
+            // If this is the predefined message, use it directly
+            textResponse = transcription;
+          } else {
+            console.log("Handling user-generated transcription...");
+            // Process the transcription with the chosen model
+            if (textModel === 'openai') {
+              console.log("Sending transcription to OpenAI for processing...");
+              const gptResponse = await openai.chat.completions.create({
+                model: 'gpt-4',
+                messages: [{ role: 'user', content: transcription ?? '' }],
+              });
+              textResponse = gptResponse.choices[0].message.content ?? '';
+              console.log("Received response from OpenAI:", textResponse);
+            } else if (textModel === 'groq') {
+              console.log("Received response from Groq:", textResponse);
+              const groqResponse = await groqClient.chat.completions.create({
+                messages: [{ role: 'user', content: transcription ?? '' }],
+                model: 'llama3-8b-8192',
+              });
+              textResponse = groqResponse.choices[0].message.content ?? '';
+              console.log("Received response from Groq:", textResponse);
+            } else if (textModel === 'deepgram') {
+              textResponse = transcription ?? '';
+              console.log("Handling transcription with Deepgram:", textResponse);
+            }
           }
 
           const textChunks = splitTextIntoChunks(textResponse, MAX_CHUNK_SIZE);
+          console.log("Split text into chunks:", textChunks);
 
           for (const chunk of textChunks) {
             let audioBuffer: Buffer | undefined;
             if (speechService === 'elevenlabs') {
+              console.log("Sending chunk to ElevenLabs for speech synthesis...");
               audioBuffer = await synthesizeSpeechWithElevenLabs(chunk);
+              console.log("Received audio buffer from ElevenLabs");
             } else if (speechService === 'deepgram') {
+              console.log("Sending chunk to Deepgram for speech synthesis...");
               audioBuffer = await synthesizeSpeechWithDeepgram(chunk);
+              console.log("Received audio buffer from Deepgram");
             }
 
             if (!audioBuffer) throw new Error("Failed to synthesize audio");
 
             const audioBase64 = audioBuffer.toString('base64');
             const jsonChunk = JSON.stringify({ audio: audioBase64 });
+            
+            // Log each audio chunk that is being sent back
+            console.log("Sending audio chunk back to client");
 
             // Ensure the chunk is newline-separated for easy client-side parsing
             controller.enqueue(encoder.encode(jsonChunk + '\n'));

@@ -9,6 +9,7 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass';
 import { Reflector } from 'three/examples/jsm/objects/Reflector';
 import { ShaderMaterial, IcosahedronGeometry, AudioListener, AudioLoader } from 'three';
 
+
 // Extend three.js with postprocessing passes for React Three Fiber
 extend({ EffectComposer, RenderPass, UnrealBloomPass, OutputPass });
 
@@ -31,6 +32,8 @@ const Experience: React.FC<ExperienceProps> = ({ audioChunks }) => {
     console.log("Received audio chunks in Experience:", audioChunks); // Debug log
     if (audioChunks && audioChunks.length > 0) {
       playAudioChunks(audioChunks);
+    } else {
+      console.log("No audio chunks to play.");
     }
   }, [audioChunks]);
 
@@ -57,6 +60,10 @@ const Experience: React.FC<ExperienceProps> = ({ audioChunks }) => {
   };
 
   const playAudioChunks = async (audioChunks: string[]) => {
+    if (audioChunks.length === 0) {
+      console.log('No audio chunks to play.');
+      return;
+    }
     for (const chunk of audioChunks) {
       stopCurrentSound();
       console.log("Playing chunk:", chunk); // Debug log for each chunk being played

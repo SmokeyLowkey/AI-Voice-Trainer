@@ -7,9 +7,10 @@ import { faMicrophone } from '@fortawesome/free-solid-svg-icons'; // Import micr
 // Define the props type
 interface MicrophoneProps {
   playAudio: (audioChunks: string[]) => void; // Expect an array of strings
+  isVisible: boolean;
 }
 
-const Microphone: React.FC<MicrophoneProps> = ({ playAudio }) => {
+const Microphone: React.FC<MicrophoneProps> = ({ playAudio, isVisible }) => {
   const { startRecording, stopRecording, recording, text } = useRecordVoice(playAudio);
 
   useEffect(() => {
@@ -34,6 +35,10 @@ const Microphone: React.FC<MicrophoneProps> = ({ playAudio }) => {
     };
   }, [startRecording, stopRecording]);
 
+  if (!isVisible){
+    return null;
+  }
+
   return (
     <>
       {/* Microphone Button */}
@@ -48,7 +53,7 @@ const Microphone: React.FC<MicrophoneProps> = ({ playAudio }) => {
           <FontAwesomeIcon
             icon={faMicrophone}
             size="4x"
-            className={`text-red-500 transition-transform duration-300 ease-in-out ${recording ? 'animate-pulse text-red-400' : ''}`}
+            className={`text-red-500 transition-transform duration-300 ease-in-out ${recording ? 'animate-pulse text-red-300' : ''}`}
           />
         </button>
         <p className="text-white text-base mt-2">
