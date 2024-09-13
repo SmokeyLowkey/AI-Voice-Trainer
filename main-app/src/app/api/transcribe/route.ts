@@ -1,29 +1,25 @@
 import OpenAI, { toFile } from "openai";
-import { NextApiRequest, NextApiResponse } from "next";
-import { buffer } from 'micro';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
 });
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
-export async function POST(req: NextApiRequest, res: NextApiResponse): Promise<void> {
+export async function POST(req: Request): Promise<Response> {
   try {
     console.log("Incoming request to transcribe");
 
-    // Get raw body data since bodyParser is false
-    const rawBody = await buffer(req);
-    const body = rawBody.toString();
+    // Get raw body data since bodyParser is disabled in the app router
+    const rawBody = await req.arrayBuffer();
+    console.log("this is after the const rawBody...");
+    
+    const body = Buffer.from(rawBody).toString();  // Convert ArrayBuffer to string
     const { audioData }: { audioData: string } = JSON.parse(body);
 
     if (!audioData) {
-      res.status(400).json({ error: "No audio data provided" });
-      return;
+      return new Response(JSON.stringify({ error: "No audio data provided" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     console.log("Received Base64 audio data of size:", audioData.length);
@@ -48,10 +44,16 @@ export async function POST(req: NextApiRequest, res: NextApiResponse): Promise<v
 
     console.log("Transcription result:", transcription.text);
 
-    res.status(200).json({ transcription: transcription.text });
+    return new Response(JSON.stringify({ transcription: transcription.text }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
   } catch (error: any) {
     console.error("Error during transcription:", error.message || error.response?.data);
 
-    res.status(500).json({ error: "Error processing transcription" });
+    return new Response(JSON.stringify({ error: "Error processing transcription" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }
