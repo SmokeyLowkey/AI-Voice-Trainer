@@ -25,6 +25,8 @@ const Experience: React.FC<ExperienceProps> = ({ audioChunks }) => {
   const clock = useRef(new THREE.Clock());
   const audioRef = useRef<THREE.Audio | null>(null);
 
+  const backgroundColor = 0x000000; // Set the background color here
+
   useEffect(() => {
     console.log("Received audio chunks in Experience:", audioChunks); // Debug log
     if (audioChunks && audioChunks.length > 0) {
@@ -151,11 +153,14 @@ const Experience: React.FC<ExperienceProps> = ({ audioChunks }) => {
     composer.current.addPass(bloomPass);
     composer.current.addPass(outputPass);
 
+    // Set the scene background color
+    scene.background = new THREE.Color(backgroundColor);
+
     const groundMirror = new Reflector(new THREE.PlaneGeometry(100, 100), {
       clipBias: 0.003,
       textureWidth: window.innerWidth * window.devicePixelRatio,
       textureHeight: window.innerHeight * window.devicePixelRatio,
-      color: 0x777777,
+      color: backgroundColor,
       recursion: 1,
     });
     groundMirror.position.y = -8;

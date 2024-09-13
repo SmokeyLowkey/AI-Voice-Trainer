@@ -9,7 +9,7 @@ interface HeaderProps {
 
 export default function Header({ userId }: HeaderProps) {
   return (
-    <div className="bg-gray-600 items-center">
+    <div className="fixed top-0 left-0 w-full bg-#000000 z-50 items-center">
       <div className="container mx-auto flex justify-between py-4">
         <div>
           {userId ? (
