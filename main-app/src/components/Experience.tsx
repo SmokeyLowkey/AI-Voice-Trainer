@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useRef } from 'react';
+import React, { MutableRefObject, useEffect, useRef } from 'react';
 import { useFrame, extend, useThree } from "@react-three/fiber";
 import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
@@ -15,16 +15,16 @@ extend({ EffectComposer, RenderPass, UnrealBloomPass, OutputPass });
 
 interface ExperienceProps {
   audioChunks: string[];
+  audioRef: MutableRefObject<THREE.Audio<GainNode> | null>; // Add audioRef to the interface
 }
 
-const Experience: React.FC<ExperienceProps> = ({ audioChunks }) => {
+const Experience: React.FC<ExperienceProps> = ({ audioChunks, audioRef }) => {
   const composer = useRef<EffectComposer | null>(null);
   const { scene, camera, gl } = useThree();
   const shaderMaterialRef = useRef<THREE.ShaderMaterial | null>(null);
   const meshRef = useRef<THREE.Mesh | null>(null);
   const analyserRef = useRef<THREE.AudioAnalyser | null>(null);
   const clock = useRef(new THREE.Clock());
-  const audioRef = useRef<THREE.Audio | null>(null);
 
   const backgroundColor = 0x000000; // Set the background color here
 
@@ -70,7 +70,7 @@ const Experience: React.FC<ExperienceProps> = ({ audioChunks }) => {
       const listener = new AudioListener();
       camera.add(listener);
 
-      const sound = new THREE.Audio(listener);
+      audioRef.current = new THREE.Audio(listener);
       const audioLoader = new AudioLoader();
 
       const blob = base64ToBlob(chunk, 'audio/wav');
@@ -80,13 +80,19 @@ const Experience: React.FC<ExperienceProps> = ({ audioChunks }) => {
 
       await new Promise<void>((resolve, reject) => {
         audioLoader.load(audioUrl, (buffer) => {
-          sound.setBuffer(buffer);
-          sound.setLoop(false);
-          sound.setVolume(1);
-          sound.play();
-          analyserRef.current = new THREE.AudioAnalyser(sound, 256);
-          if (sound.source) {
-            sound.source.onended = () => resolve();
+          if(audioRef.current){
+          audioRef.current?.setBuffer(buffer);
+          audioRef.current?.setLoop(false);
+          audioRef.current?.setVolume(1);
+          audioRef.current?.play();
+          analyserRef.current = new THREE.AudioAnalyser(audioRef.current, 256);
+        
+          if (audioRef.current.source) {
+            audioRef.current.source.onended = () => resolve();
+          }
+          } else{
+            console.error("audioRef.current is null");
+            reject(new Error("audioRef.current is null"))
           }
         }, undefined, (error) => {
           console.error("Error loading audio: ", error);

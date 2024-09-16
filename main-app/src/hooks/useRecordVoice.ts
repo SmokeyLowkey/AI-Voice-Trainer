@@ -7,9 +7,10 @@ interface UseRecordVoiceReturn {
   startRecording: () => void;
   stopRecording: () => void;
   text: string;
+  stopAudioPlayback: () => void; // Add this to stop audio playback
 }
 
-export const useRecordVoice = (playAudio: (audioChunks: string[]) => void): UseRecordVoiceReturn => {
+export const useRecordVoice = (playAudio: (audioChunks: string[]) => void, stopAudio: () => void): UseRecordVoiceReturn => {
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [recording, setRecording] = useState(false);
   const [text, setText] = useState("");
@@ -27,6 +28,8 @@ export const useRecordVoice = (playAudio: (audioChunks: string[]) => void): UseR
 
   const startRecording = () => {
     if (mediaRecorder && mediaRecorder.state === "inactive") {
+      // Interrupt current audio playback
+      stopAudio(); // Stop any playing audio
       isRecording.current = true;
       mediaRecorder.start();
       setRecording(true);
@@ -90,7 +93,7 @@ export const useRecordVoice = (playAudio: (audioChunks: string[]) => void): UseR
           ({ value, done } = await reader.read());
         }
       }
-
+      console.log("Received transcription text:", transcription);
       console.log("All chunks received:", audioChunks);
       playAudio(audioChunks);
     } catch (error) {
@@ -158,5 +161,5 @@ export const useRecordVoice = (playAudio: (audioChunks: string[]) => void): UseR
     return () => stopMediaStream();
   }, []);
 
-  return { recording, startRecording, stopRecording, text };
+  return { recording, startRecording, stopRecording, text, stopAudioPlayback: stopAudio };
 };

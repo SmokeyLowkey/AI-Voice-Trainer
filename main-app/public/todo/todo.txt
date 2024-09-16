@@ -1,10 +1,10 @@
 1. Core Functionality
-- [ ] Microphone Control
-    - [ ] Microphone unavailable until user presses "get started" button
-- [ ] Microphone interupt when user starts recording again.
+- [X] Microphone Control
+    - [X] Microphone unavailable until user presses "get started" button
+- [X] Microphone interupt when user starts recording again.
 
 - [ ] LLM Role Management
-    - [ ] Modify the LLM role to send the role specification after login or on new conversation start.
+    - [ ] Modify the LLM role to send the role specification after get started button is pressed.
 
 - [ ] PostgreSQL Database with Prisma
     - [ ] Create PostgreSQL database using Prisma

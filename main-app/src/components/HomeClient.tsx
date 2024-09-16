@@ -7,6 +7,9 @@ import dynamic from 'next/dynamic';
 import { SignedIn, SignedOut } from '@clerk/nextjs';
 import Header from './Header';
 import { sendPredefinedMessage } from '@/utils/speechSynthesis';
+import * as THREE from 'three';
+import Transcript from './Transcript';
+import { useRecordVoice } from '@/hooks/useRecordVoice';
 
 // Correct dynamic import with default export
 const Experience = dynamic(() => import('@/components/Experience').then((mod) => mod.default), {
@@ -28,7 +31,9 @@ export default function HomeClient({ userId }: HomeClientProps) {
   const cameraDistance = 100;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const predefinedMessageSent = useRef(false);
-
+  // Define a state to hold the transcription text
+  const [text, setText] = useState<string | null>(null); // Now managing text in HomeClient
+  const audioRef = useRef<THREE.Audio | null>(null); // Add this ref for audio handling
 
   // Modify playAudio to accept an array of strings
   const playAudio = (audioChunks: string[]) => {
@@ -39,6 +44,16 @@ export default function HomeClient({ userId }: HomeClientProps) {
       console.error('No audio chunks provided');
     }
   };
+
+  // Stop current audio playback
+  const stopAudio = () => {
+    if (audioRef.current && audioRef.current.isPlaying) {
+      audioRef.current.stop();
+    }
+  };
+
+  // Pass stopAudioPlayback to the useRecordVoice hook
+  const { startRecording, stopRecording } = useRecordVoice(playAudio, stopAudio);
 
   const handleGetStarted = async () => {
     if (isSubmitting) return; // Prevent further calls if already submitting
@@ -77,7 +92,7 @@ export default function HomeClient({ userId }: HomeClientProps) {
             maxDistance={15}
             maxPolarAngle={Math.PI / 2.2}
           />
-          <Experience audioChunks={audioBase64} />
+          <Experience audioChunks={audioBase64} audioRef={audioRef}  />
         </Canvas>
 
         {/* Show the "Get Started" button if the microphone is not visible */}
@@ -92,8 +107,12 @@ export default function HomeClient({ userId }: HomeClientProps) {
           </div>
         )}
 
-        {/* Conditionally show the microphone only after "Get Started" is clicked */}
-        {isMicVisible && <Microphone playAudio={playAudio} isVisible={false} />}
+         {/* Conditionally show the microphone and the transcription */}
+         {isMicVisible && (
+          <>
+            <Microphone playAudio={playAudio} isVisible={isMicVisible} setText={setText} stopAudio={stopAudio} />
+          </>
+        )}
 
         {/* Predefined message status */}
         {messagePlaying && (

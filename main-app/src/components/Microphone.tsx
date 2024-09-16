@@ -8,10 +8,16 @@ import { faMicrophone } from '@fortawesome/free-solid-svg-icons'; // Import micr
 interface MicrophoneProps {
   playAudio: (audioChunks: string[]) => void; // Expect an array of strings
   isVisible: boolean;
+  setText: (text: string) => void;
+  stopAudio: () => void;
 }
 
-const Microphone: React.FC<MicrophoneProps> = ({ playAudio, isVisible }) => {
-  const { startRecording, stopRecording, recording, text } = useRecordVoice(playAudio);
+const Microphone: React.FC<MicrophoneProps> = ({ playAudio, isVisible, setText, stopAudio }) => {
+  const { startRecording, stopRecording, recording, text } = useRecordVoice(playAudio, stopAudio);
+
+  useEffect(() => {
+    setText(text); // Pass the transcription text to the parent (HomeClient)
+  }, [text, setText]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -37,7 +43,10 @@ const Microphone: React.FC<MicrophoneProps> = ({ playAudio, isVisible }) => {
 
   if (!isVisible){
     return null;
+  }else{
+    console.log("isMicVisible:", isVisible);
   }
+  
 
   return (
     <>
