@@ -1,0 +1,69 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int            @id @default(autoincrement())
+  email         String         @unique
+  name          String
+  conversations Conversation[] // One-to-many relation with Conversation
+  sessions      Session[] // One-to-many relation with Session
+  points        Points[] // One-to-many relation with Points
+}
+
+model MachineData {
+  id          Int       @id @default(autoincrement())
+  machineId   String    @unique
+  model       String
+  pinLow      String?   // Optional to store low pin value
+  pinHigh     String?   // Optional to store high pin value
+  parts       PartData[]
+}
+
+model PartData {
+  id          Int       @id @default(autoincrement())
+  partId      String
+  partDescription String
+  quantityRequired Int
+  canvasImage String?
+  breadcrumb  String
+  machine     MachineData @relation(fields: [machineDataId], references: [id])
+  machineDataId Int
+}
+
+model Session {
+  id            Int            @id @default(autoincrement())
+  user          User           @relation(fields: [userId], references: [id])
+  userId        Int
+  createdAt     DateTime       @default(now())
+  conversations Conversation[] // One-to-many relation with Conversation
+}
+
+model Conversation {
+  id        Int      @id @default(autoincrement())
+  session   Session  @relation(fields: [sessionId], references: [id])
+  sessionId Int
+  message   String
+  createdAt DateTime @default(now())
+
+  User User[]
+}
+
+model Points {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  points    Int
+  createdAt DateTime @default(now())
+}
