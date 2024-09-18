@@ -4,11 +4,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { OrbitControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import dynamic from 'next/dynamic';
-import { SignedIn, SignedOut } from '@clerk/nextjs';
+import { SignedIn, SignedOut, useAuth } from '@clerk/nextjs';
 import Header from './Header';
 import { sendPredefinedMessage } from '@/utils/speechSynthesis';
 import * as THREE from 'three';
-import Transcript from './Transcript';
 import { useRecordVoice } from '@/hooks/useRecordVoice';
 
 // Correct dynamic import with default export
@@ -25,6 +24,7 @@ interface HomeClientProps {
 }
 
 export default function HomeClient({ userId }: HomeClientProps) {
+  const {isSignedIn} = useAuth();
   const [audioBase64, setAudioBase64] = useState<string[]>([]); // Now it's an array of strings
   const [isMicVisible, setIsMicVisible] = useState(false);
   const [messagePlaying, setMessagePlaying] = useState(false); // Track whether the message is playing
@@ -75,6 +75,26 @@ export default function HomeClient({ userId }: HomeClientProps) {
 
   initiatePredefinedMessage();
 }, []);
+
+// Sync user with Prisma database on sign-in
+useEffect(() => {
+  if (isSignedIn) {
+    const syncUser = async () => {
+      try {
+        const response = await fetch('/api/sync-user', {
+          method: 'GET',
+        });
+        if (!response.ok) {
+          console.error('Failed to sync user:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error syncing user:', error);
+      }
+    };
+
+    syncUser();
+  }
+}, [isSignedIn]);
 
   return (
     <main className="h-screen min-h-screen">

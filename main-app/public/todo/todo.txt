@@ -6,13 +6,13 @@
 - [ ] LLM Role Management
     - [ ] Modify the LLM role to send the role specification after get started button is pressed.
 
-- [ ] PostgreSQL Database with Prisma
-    - [ ] Create PostgreSQL database using Prisma
-        - [ ] Set up Prisma database
+- [X] PostgreSQL Database with Prisma
+    - [X] Create PostgreSQL database using Prisma
+        - [X] Set up Prisma database
         - [ ] Set up Prisma models:
-            - [ ] User
-            - [ ] Machine data
-            - [ ] Part data
+            - [X] User
+            - [X] Machine data
+            - [X] Part data
             - [ ] Session handling
                 - [ ] Conversation history based on user ID
             - [ ] Points model

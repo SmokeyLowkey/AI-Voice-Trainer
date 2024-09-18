@@ -15,8 +15,10 @@ datasource db {
 
 model User {
   id            Int            @id @default(autoincrement())
+  clerkId       String         @unique
   email         String         @unique
   name          String
+  lastName      String
   conversations Conversation[] // One-to-many relation with Conversation
   sessions      Session[] // One-to-many relation with Session
   points        Points[] // One-to-many relation with Points
