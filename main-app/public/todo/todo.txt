@@ -13,10 +13,10 @@
             - [X] User
             - [X] Machine data
             - [X] Part data
-            - [ ] Session handling
-                - [ ] Conversation history based on user ID
+            - [X] Session handling
+                - [X] Conversation history based on user ID
             - [ ] Points model
-        - [ ] Import Excel files into the database
+        - [X] Import Excel files into the database
 
 - [ ] Points System
     - [ ] Set up accuracy-based scoring:
@@ -28,9 +28,9 @@
 
 2. Security and Session Handling
 - [X] Authentication and Security
-    - [ ] Ensure Prisma models are connected to the authentication system (e.g., Clerk)
-    - [ ] Protect API routes for session handling and conversation history retrieval
-    - [ ] Secure data handling for sensitive user information
+    - [X] Ensure Prisma models are connected to the authentication system (e.g., Clerk)
+    - [X] Protect API routes for session handling and conversation history retrieval
+    - [X] Secure data handling for sensitive user information
     - [ ] Implement role-based access control (if needed)
 
 - [ ] Session Handling

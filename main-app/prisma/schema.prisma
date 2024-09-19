@@ -46,10 +46,12 @@ model PartData {
 
 model Session {
   id            Int            @id @default(autoincrement())
-  user          User           @relation(fields: [userId], references: [id])
-  userId        Int
+  userId        String
   createdAt     DateTime       @default(now())
+  status        String         @default("active") // "active" or "completed"
   conversations Conversation[] // One-to-many relation with Conversation
+
+  User User[]
 }
 
 model Conversation {
@@ -57,6 +59,7 @@ model Conversation {
   session   Session  @relation(fields: [sessionId], references: [id])
   sessionId Int
   message   String
+  sender    String   // 'user' or 'ai' to identify who sent the message
   createdAt DateTime @default(now())
 
   User User[]

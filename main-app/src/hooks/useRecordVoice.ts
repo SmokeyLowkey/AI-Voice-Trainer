@@ -9,14 +9,29 @@ interface UseRecordVoiceReturn {
   text: string;
   stopAudioPlayback: () => void; // Add this to stop audio playback
 }
+// Define UserSession interface at the top of the file
+interface UserSession {
+  id: number;
+  status: string;
+  // Add other properties as needed
+}
 
-export const useRecordVoice = (playAudio: (audioChunks: string[]) => void, stopAudio: () => void): UseRecordVoiceReturn => {
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+export const useRecordVoice = (
+  playAudio: (audioChunks: string[]) => void,
+  stopAudio: () => void,
+  logConversation: (message: string, sender: "user" | "ai") => void,
+  activeSession: UserSession | null,
+): UseRecordVoiceReturn => {
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
+    null
+  );
   const [recording, setRecording] = useState(false);
   const [text, setText] = useState("");
   const isRecording = useRef(false);
   const chunks = useRef<Blob[]>([]);
   const mediaStreamRef = useRef<MediaStream | null>(null); // Ref to store media stream
+  const retryCount = useRef(0); // Track retry attempts
+  const maxRetries = 5; // Maximum number of retries
 
   const stopMediaStream = () => {
     if (mediaStreamRef.current) {
@@ -46,46 +61,74 @@ export const useRecordVoice = (playAudio: (audioChunks: string[]) => void, stopA
 
   const getTranscriptionAndAudio = async (base64data: string) => {
     try {
+      console.log("this is the activesession id begining of the try: ",activeSession?.id);
       console.log("Sending audio data for transcription:", base64data);
 
+      // Introduce a more controlled wait loop to ensure activeSession is ready
+      let waitTime = 0;
+      const maxWaitTime = 5000; // Maximum wait time in milliseconds
+
+      while ((!activeSession || !activeSession.id) && waitTime < maxWaitTime) {
+        console.log("Waiting for active session to be ready...");
+        await new Promise((resolve) => setTimeout(resolve, 500)); // Wait 500ms before checking again
+        waitTime += 500;
+      }
+
+      if (!activeSession || !activeSession.id) {
+        console.log("this is the session id: ", activeSession?.id)
+        console.error("No active session ID available after waiting.");
+        return;
+      }
+
+      // Proceed with the transcription request
+      // Reset retry count
+      retryCount.current = 0;
+
+      const sessionId = activeSession.id;
+      console.log("Using sessionID: ", sessionId);
+
+      // send transcription request
       const transcriptionResponse = await fetch("/api/transcribe", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ audioData: base64data }),
+        body: JSON.stringify({ audioData: base64data, sessionId }),
       }).then((res) => res.json());
 
       const { transcription } = transcriptionResponse;
       console.log("Received transcription:", transcription);
       setText(transcription);
 
+      // Log the user's transcription
+      logConversation(transcription, "user");
+
       const gptResponse = await fetch("/api/gpt", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ transcription }),
+        body: JSON.stringify({ transcription, sessionId }),
       });
 
       const audioChunks: string[] = [];
       const reader = gptResponse.body?.getReader();
-      const decoder = new TextDecoder('utf-8');
+      const decoder = new TextDecoder("utf-8");
 
-      let jsonText = '';
+      let jsonText = "";
       if (reader) {
         let { value, done } = await reader.read();
         while (!done) {
           jsonText += decoder.decode(value, { stream: true });
-          const lines = jsonText.split('\n');
+          const lines = jsonText.split("\n");
 
           for (let i = 0; i < lines.length - 1; i++) {
             try {
               const parsedLine = JSON.parse(lines[i]);
-              console.log('Parsed chunk:', parsedLine);
+              console.log("Parsed chunk:", parsedLine);
               audioChunks.push(parsedLine.audio);
             } catch (err) {
-              console.error('Error parsing JSON line:', lines[i], err);
+              console.error("Error parsing JSON line:", lines[i], err);
             }
           }
 
@@ -161,5 +204,11 @@ export const useRecordVoice = (playAudio: (audioChunks: string[]) => void, stopA
     return () => stopMediaStream();
   }, []);
 
-  return { recording, startRecording, stopRecording, text, stopAudioPlayback: stopAudio };
+  return {
+    recording,
+    startRecording,
+    stopRecording,
+    text,
+    stopAudioPlayback: stopAudio,
+  };
 };

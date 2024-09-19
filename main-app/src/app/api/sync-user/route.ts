@@ -34,14 +34,14 @@ export async function GET() {
   }
 
   // If dbUser still doesn't exist, redirect to the sign-in page
-  if (!dbUser) {
-    return new NextResponse(null, {
-      status: 302, // 302 Found - temporary redirect
-      headers: {
-        Location: '/sign-in',
-      },
-    });
-  }
+  // if (!dbUser) {
+  //   return new NextResponse(null, {
+  //     status: 302, // 302 Found - temporary redirect
+  //     headers: {
+  //       Location: '/sign-in',
+  //     },
+  //   });
+  // }
 
   // Perform additional logic if needed with dbUser object
   // Example: redirect to a specific page after syncing

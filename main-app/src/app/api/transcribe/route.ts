@@ -13,7 +13,7 @@ export async function POST(req: Request): Promise<Response> {
     console.log("this is after the const rawBody...");
     
     const body = Buffer.from(rawBody).toString();  // Convert ArrayBuffer to string
-    const { audioData }: { audioData: string } = JSON.parse(body);
+    const { audioData, sessionId }: { audioData: string; sessionId: string } = JSON.parse(body);
 
     if (!audioData) {
       return new Response(JSON.stringify({ error: "No audio data provided" }), {
@@ -22,7 +22,15 @@ export async function POST(req: Request): Promise<Response> {
       });
     }
 
+    if (!sessionId) {
+      return new Response(JSON.stringify({ error: "No session ID provided" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     console.log("Received Base64 audio data of size:", audioData.length);
+    console.log("Associated session ID:", sessionId);  // Log or process sessionId as needed
 
     // Decode Base64 audio data
     const audioBuffer = Buffer.from(audioData, "base64");
@@ -44,7 +52,7 @@ export async function POST(req: Request): Promise<Response> {
 
     console.log("Transcription result:", transcription.text);
 
-    return new Response(JSON.stringify({ transcription: transcription.text }), {
+    return new Response(JSON.stringify({ transcription: transcription.text, sessionId }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });

@@ -1,10 +1,11 @@
 import { SignedIn, SignedOut, useAuth } from "@clerk/nextjs";
 
 export const sendPredefinedMessage = async (
-  setAudioChunks: (chunks: string[]) => void
+  setAudioChunks: (chunks: string[]) => void,
 ) => {
   try {
-    const response = await fetch("/api/gpt", {
+
+    const response = await fetch("/api/predefined-message", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -16,10 +17,14 @@ export const sendPredefinedMessage = async (
       }),
     });
 
-    if (!response.body) {
-      throw new Error("ReadableStream not supported");
+    // Check if the response is OK
+    if (!response.ok) {
+      throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
     }
 
+    if (!response.body) {
+      throw new Error("ReadableStream not supported or no body in response");
+    }
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let audioChunks: string[] = [];

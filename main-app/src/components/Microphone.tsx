@@ -10,10 +10,12 @@ interface MicrophoneProps {
   isVisible: boolean;
   setText: (text: string) => void;
   stopAudio: () => void;
+  logConversation: (message: string, sender: 'user' | 'ai') => void; // Add this prop
+  activeSession: { id: number; status: string } | null; // Define this prop correctly
 }
 
-const Microphone: React.FC<MicrophoneProps> = ({ playAudio, isVisible, setText, stopAudio }) => {
-  const { startRecording, stopRecording, recording, text } = useRecordVoice(playAudio, stopAudio);
+const Microphone: React.FC<MicrophoneProps> = ({ playAudio, isVisible, setText, stopAudio, logConversation, activeSession }) => {
+  const { startRecording, stopRecording, recording, text } = useRecordVoice(playAudio, stopAudio, logConversation, activeSession);
 
   useEffect(() => {
     setText(text); // Pass the transcription text to the parent (HomeClient)
