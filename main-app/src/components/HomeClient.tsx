@@ -8,8 +8,8 @@ import { SignedIn, SignedOut, useAuth, useUser } from '@clerk/nextjs';
 import Header from './Header';
 import { sendPredefinedMessage } from '@/utils/speechSynthesis';
 import * as THREE from 'three';
-import { useRecordVoice } from '@/hooks/useRecordVoice';
-import { Session } from 'inspector/promises';
+import { getRandomMachineAndPart } from '@/utils/getRandomPart';
+
 
 // Correct dynamic import with default export
 const Experience = dynamic(() => import('@/components/Experience').then((mod) => mod.default), {

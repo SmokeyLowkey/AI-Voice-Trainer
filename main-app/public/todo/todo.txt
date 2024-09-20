@@ -33,7 +33,7 @@
     - [X] Secure data handling for sensitive user information
     - [ ] Implement role-based access control (if needed)
 
-- [ ] Session Handling
+- [X] Session Handling
     - [X] Implement session timeout or inactivity handling (e.g., timeout after a period of inactivity)
     - [X] Re-authenticate users if the session expires during long interactions
 

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { PrismaClient } from '@prisma/client';
+import { getRandomMachineAndPart } from '@/utils/getRandomPart';
 
 const prisma = new PrismaClient();
 
@@ -12,11 +13,17 @@ export async function GET() {
       return new NextResponse('Unauthorized', { status: 401 });
     }
     console.log(userId);
+    // Fetch the random machine and part when creating a new session
+    const { machineModel, partDescription, partNumber, breadcrumb } = await getRandomMachineAndPart();
 
     const activeSession = await prisma.session.findFirst({
       where: {
         userId: userId,
         status: 'active',
+        machineModel,
+        partDescription,
+        partNumber, // This is stored but never revealed to the user
+        breadcrumb,
       },
     });
 
@@ -46,11 +53,18 @@ export async function POST(request: Request) {
     return new NextResponse('Confirmation text does not match.', { status: 400 });
   }
 
+  // Fetch the random machine and part when creating a new session
+  const { machineModel, partDescription, partNumber, breadcrumb } = await getRandomMachineAndPart();
+
   // Check for active session before creating a new one
   const activeSession = await prisma.session.findFirst({
     where: {
       userId: userId,
       status: 'active',
+      machineModel,
+      partDescription,
+      partNumber, // This is stored but never revealed to the user
+      breadcrumb,
     },
   });
 
@@ -63,6 +77,10 @@ export async function POST(request: Request) {
     data: {
       userId: userId,
       status: 'active',
+      machineModel,
+      partDescription,
+      partNumber, // This is stored but never revealed to the user
+      breadcrumb,
     },
   });
 

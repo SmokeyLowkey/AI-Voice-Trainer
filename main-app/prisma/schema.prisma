@@ -52,6 +52,12 @@ model Session {
   conversations Conversation[] // One-to-many relation with Conversation
 
   User User[] // If a relationship to User is needed, modify as required
+
+  // Add fields to store the random machine and part data for the session
+  machineModel   String?
+  partDescription String?
+  partNumber     String? // Keep the part number to compare against the user's guess
+  breadcrumb     String?
 }
 
 model Conversation {
