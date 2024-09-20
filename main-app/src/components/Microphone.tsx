@@ -67,7 +67,7 @@ const Microphone: React.FC<MicrophoneProps> = ({ playAudio, isVisible, setText, 
             className={`text-red-500 transition-transform duration-300 ease-in-out ${recording ? 'animate-pulse text-red-300' : ''}`}
           />
         </button>
-        <p className="text-white text-base mt-2">
+        <p className="text-orange-500 text-base mt-2">
           {text || 'Press and hold spacebar or click the microphone to record.'}
         </p>
       </div>

@@ -46,12 +46,12 @@ model PartData {
 
 model Session {
   id            Int            @id @default(autoincrement())
-  userId        String
+  userId        String         // Correct the type to String to match Clerk's userId
   createdAt     DateTime       @default(now())
   status        String         @default("active") // "active" or "completed"
   conversations Conversation[] // One-to-many relation with Conversation
 
-  User User[]
+  User User[] // If a relationship to User is needed, modify as required
 }
 
 model Conversation {
@@ -61,8 +61,9 @@ model Conversation {
   message   String
   sender    String   // 'user' or 'ai' to identify who sent the message
   createdAt DateTime @default(now())
+  userId    String    // Correct the type to String to match Clerk's userId
 
-  User User[]
+  User User[] // If a relationship to User is needed, modify as required
 }
 
 model Points {

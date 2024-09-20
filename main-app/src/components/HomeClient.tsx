@@ -4,11 +4,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { OrbitControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import dynamic from 'next/dynamic';
-import { SignedIn, SignedOut, useAuth } from '@clerk/nextjs';
+import { SignedIn, SignedOut, useAuth, useUser } from '@clerk/nextjs';
 import Header from './Header';
 import { sendPredefinedMessage } from '@/utils/speechSynthesis';
 import * as THREE from 'three';
 import { useRecordVoice } from '@/hooks/useRecordVoice';
+import { Session } from 'inspector/promises';
 
 // Correct dynamic import with default export
 const Experience = dynamic(() => import('@/components/Experience').then((mod) => mod.default), {
@@ -30,6 +31,7 @@ interface UserSession {
 }
 
 export default function HomeClient({ userId }: HomeClientProps) {
+  const {user} = useUser();
   const {isSignedIn} = useAuth();
   const [audioBase64, setAudioBase64] = useState<string[]>([]); // Now it's an array of strings
   const [isMicVisible, setIsMicVisible] = useState(false);
@@ -43,10 +45,12 @@ export default function HomeClient({ userId }: HomeClientProps) {
   const [activeSession, setActiveSession] = useState<UserSession | null>(null);
   const [confirmText, setConfirmText] = useState(''); // State for new session confirmation input
   const [conversationHistory, setConversationHistory] = useState([]); // State to store conversation history
+  const [hasPlayedInitialMessage, setHasPlayedInitialMessage] = useState(false);
 
   const logConversation = async (message: string, sender: 'user' | 'ai') => {
     if (!activeSession) return;
     try {
+      console.log('Logging conversation: ', {sessionId: activeSession.id, message, sender});
       const response = await fetch('/api/conversations', {
         method: 'POST',
         headers: {
@@ -82,7 +86,7 @@ export default function HomeClient({ userId }: HomeClientProps) {
   };
 
   // Pass stopAudioPlayback to the useRecordVoice hook
-  const { startRecording, stopRecording } = useRecordVoice(playAudio, stopAudio, logConversation, activeSession);
+  
 
   const handleGetStarted = async () => {
     if (isSubmitting || activeSession) return; // Prevent further calls if already submitting
@@ -133,26 +137,16 @@ export default function HomeClient({ userId }: HomeClientProps) {
       if (response.ok) {
         setActiveSession(null);
         setIsMicVisible(false); // Hide the microphone until a new session starts
+         // Play the completion message
+        if (user && user.firstName) {
+          await sendPredefinedMessage(setAudioBase64, user.firstName, 'completion');
+        }
       } else {
         console.error('Failed to complete session.');
       }
     } catch (error) {
       console.error('Error completing session:', error);
     }
-  };
-
-  // Function to handle starting a new session
-  const handleConfirmNewSession = async () => {
-    if (confirmText !== 'start new simulation') {
-      alert('You must type "start new simulation" to confirm.');
-      return;
-    }
-
-    // Reset confirmation text
-    setConfirmText('');
-
-    // Start a new session
-    await handleGetStarted();
   };
 
   const fetchConversationHistory = async () => {
@@ -209,16 +203,17 @@ export default function HomeClient({ userId }: HomeClientProps) {
   // Play the predefined message when the user signs in
 useEffect(() => {
   const initiatePredefinedMessage = async () => {
-    if (!predefinedMessageSent.current) {
+    if (!predefinedMessageSent.current && user && user.firstName) {
       predefinedMessageSent.current = true; // Mark it as sent
-      await sendPredefinedMessage(setAudioBase64);
+      await sendPredefinedMessage(setAudioBase64, user?.firstName, 'welcome');
+      setHasPlayedInitialMessage(true);
     }
   };
 
   if (isSignedIn && !activeSession) {
     initiatePredefinedMessage();
   }
-}, [isSignedIn, activeSession]);
+}, [isSignedIn, activeSession, hasPlayedInitialMessage]);
 
 // Sync user with Prisma database on sign-in
 useEffect(() => {
@@ -270,6 +265,7 @@ useEffect(() => {
 
         setActiveSession(data.activeSession);
         if (data.activeSession) {
+          setIsMicVisible(true);
           console.log("Active session found:", data.activeSession);
           fetchConversationHistory(); // Fetch history if active session exists
         }
@@ -289,6 +285,12 @@ useEffect(() => {
 useEffect(() => {
   console.log("isMicVisible:", isMicVisible);
 }, [isMicVisible]);
+
+useEffect(() => {
+  if (!isSignedIn) {
+    setHasPlayedInitialMessage(false); // Reset the state on logout
+  }
+}, [isSignedIn]);
 
   return (
     <main className="h-screen min-h-screen">

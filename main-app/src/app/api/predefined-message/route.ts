@@ -32,7 +32,7 @@ export async function POST(req: Request): Promise<Response> {
         async start(controller) {
           try {
             for (const chunk of textChunks) {
-              console.log("Sending chunk to ElevenLabs for speech synthesis...");
+              console.log("Sending chunk to deepgram for speech synthesis...");
               const audioBuffer = await synthesizeSpeechWithDeepgram(chunk);
 
               if (!audioBuffer) throw new Error("Failed to synthesize audio");
@@ -118,7 +118,7 @@ async function synthesizeSpeechWithDeepgram(chunk: string): Promise<Buffer> {
     const deepgramResponse = await deepgram.speak.request(
       { text: chunk },
       {
-        model: 'aura-asteria-en',
+        model: 'aura-orion-en',
         encoding: 'linear16',
         container: 'wav',
       }

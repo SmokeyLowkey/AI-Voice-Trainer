@@ -4,6 +4,7 @@ import { createClient as createDeepgramClient } from '@deepgram/sdk';
 import { Groq } from 'groq-sdk';
 import { PrismaClient } from "@prisma/client";
 import { ReadableStream } from 'stream/web';
+import {auth} from '@clerk/nextjs/server'
 
 const prisma = new PrismaClient();
 
@@ -26,6 +27,12 @@ const speechService = process.env.SPEECH_SERVICE || 'elevenlabs';
 const MAX_CHUNK_SIZE = 1900;
 
 export async function POST(req: Request): Promise<Response> {
+  // Extract userId from Clerk's authentication
+  const { userId } = auth(); 
+   // Handle unauthorized request
+   if (!userId) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+  }
   const encoder = new TextEncoder();
   // Log to verify that the request was received
   console.log("Request received in API route");
@@ -91,6 +98,7 @@ export async function POST(req: Request): Promise<Response> {
     await prisma.conversation.create({
       data: {
         sessionId,
+        userId: userId, // Ensure the userId is provided
         sender: 'ai',
         message: textResponse,
       },
@@ -202,7 +210,7 @@ async function synthesizeSpeechWithDeepgram(chunk: string): Promise<Buffer> {
     const deepgramResponse = await deepgram.speak.request(
       { text: chunk },
       {
-        model: 'aura-asteria-en',
+        model: 'aura-orion-en',
         encoding: 'linear16',
         container: 'wav',
       }

@@ -11,18 +11,20 @@ export async function POST(request: Request) {
     return new NextResponse('Unauthorized', { status: 401 });
   }
 
-  const userIdNumber = parseInt(userId, 10);
-  if (isNaN(userIdNumber)) {
-    return new NextResponse('Invalid user ID', { status: 400 });
-  }
-
   const { sessionId, message, sender } = await request.json();
 
+  if (!sessionId || !message || !sender) {
+    return new NextResponse('Invalid input', { status: 400 });
+  }
+
   try {
+    const parsedSessionId = parseInt(sessionId, 10);  // Convert sessionId to an integer
+
     // Add a new conversation to the existing session
     await prisma.conversation.create({
       data: {
-        sessionId,
+        sessionId: parsedSessionId, // Ensure sessionId is an integer
+        userId: userId,       // Ensure userId is also an integer
         message,
         sender,
       },
@@ -43,11 +45,6 @@ export async function GET(request: Request) {
   const { userId } = auth();
   if (!userId) {
     return new NextResponse('Unauthorized', { status: 401 });
-  }
-
-  const userIdNumber = parseInt(userId, 10);
-  if (isNaN(userIdNumber)) {
-    return new NextResponse('Invalid user ID', { status: 400 });
   }
 
   const url = new URL(request.url);

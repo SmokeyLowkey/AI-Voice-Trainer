@@ -100,8 +100,10 @@ export const useRecordVoice = (
       console.log("Received transcription:", transcription);
       setText(transcription);
 
+      console.log("user transcript captured and sending to api: ", transcription)
       // Log the user's transcription
       logConversation(transcription, "user");
+      console.log("This is after the sent transcription to the api.")
 
       const gptResponse = await fetch("/api/gpt", {
         method: "POST",
@@ -136,6 +138,7 @@ export const useRecordVoice = (
           ({ value, done } = await reader.read());
         }
       }
+      
       console.log("Received transcription text:", transcription);
       console.log("All chunks received:", audioChunks);
       playAudio(audioChunks);

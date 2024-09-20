@@ -1,9 +1,17 @@
-import { SignedIn, SignedOut, useAuth } from "@clerk/nextjs";
+import { SignedIn, SignedOut, useAuth, useUser } from "@clerk/nextjs";
 
 export const sendPredefinedMessage = async (
   setAudioChunks: (chunks: string[]) => void,
+  firstName: string,
+  messageType: 'welcome' | 'completion' = 'welcome' // default to 'welcome'
 ) => {
   try {
+    let message = '';
+    if (messageType === 'welcome') {
+      message = `Welcome, ${firstName}, to the app. Here an AI model will roleplay customer interactions with you and score you based on accuracy and flow of the call. Make sure you follow your call service guidelines! So... ready to get started? Press the button!`;
+    } else if (messageType === 'completion') {
+      message = `You have completed the session ${firstName}! Take a moment to review your performance, and feel free to start a new simulation anytime.`;
+    }
 
     const response = await fetch("/api/predefined-message", {
       method: "POST",
@@ -11,52 +19,35 @@ export const sendPredefinedMessage = async (
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        transcription:
-          "Welcome to the app... Here an AI model will roleplay customer interactions with you and score you based on accuracy and flow of the call. Make sure you follow your call service guidelines! So... ready to get started? press the button!",
-        type: "predefined",
+        transcription: message,
+        type: messageType,
       }),
     });
 
-    // Check if the response is OK
-    if (!response.ok) {
-      throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
-    }
+    // Handle the stream reading and audio processing as before...
+    if (!response.body) throw new Error("No body in response");
 
-    if (!response.body) {
-      throw new Error("ReadableStream not supported or no body in response");
-    }
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let audioChunks: string[] = [];
-    let receivedText = ""; // To handle incomplete chunks
+    let receivedText = "";
 
     while (true) {
       const { done, value } = await reader.read();
-
-      if (done) {
-        console.log("Stream complete");
-        break;
-      }
+      if (done) break;
 
       const chunk = decoder.decode(value, { stream: true });
-      console.log("Received chunk:", chunk);
-
-      // Accumulate the received text
       receivedText += chunk;
 
-      // Try to parse valid JSON objects from the accumulated text
       try {
-        const jsonObjects = receivedText.split("\n").filter(Boolean); // Split by newline and remove empty strings
+        const jsonObjects = receivedText.split("\n").filter(Boolean);
         jsonObjects.forEach((jsonString) => {
           const json = JSON.parse(jsonString);
-          if (json.audio) {
-            audioChunks.push(json.audio); // Add audio chunk
-          }
+          if (json.audio) audioChunks.push(json.audio);
         });
-        receivedText = ""; // Clear accumulated text after successful parsing
+        receivedText = "";
       } catch (error) {
         console.error("Error parsing chunk:", error);
-        // Keep accumulating text until valid JSON is found
       }
     }
 
@@ -65,3 +56,4 @@ export const sendPredefinedMessage = async (
     console.error("Error fetching predefined message audio:", error);
   }
 };
+
